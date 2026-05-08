@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0f1923" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Khaled Daily" />
+  <title>Khaled Daily</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0b1520;
+      --bg2: #0f1e2e;
+      --gold: #c9a84c;
+      --gold-light: #e8c97a;
+      --gold-dim: rgba(201,168,76,0.15);
+      --teal: #1a8c7a;
+      --teal-light: #22b89e;
+      --text: #e8e0d0;
+      --text-dim: #8a9ab0;
+      --card: rgba(255,255,255,0.04);
+      --border: rgba(201,168,76,0.2);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Tajawal', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Geometric background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(201,168,76,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 100% 100%, rgba(26,140,122,0.06) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .geo-lines {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .geo-lines svg {
+      width: 100%; height: 100%;
+      opacity: 0.04;
+    }
+
+    /* Header */
+    header {
+      position: relative;
+      z-index: 10;
+      padding: 32px 24px 16px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 4px;
+    }
+
+    .logo-icon {
+      width: 44px; height: 44px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-light));
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 0 20px rgba(201,168,76,0.3);
+    }
+
+    h1 {
+      font-family: 'Tajawal', sans-serif;
+      font-weight: 700;
+      font-size: 1.6rem;
+      letter-spacing: 2px;
+      background: linear-gradient(135deg, var(--gold-light), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+    }
+
+    /* Date bar */
+    .date-bar {
+      position: relative; z-index: 10;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+      padding: 12px 24px;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .date-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal-light); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* Main content */
+    main {
+      position: relative; z-index: 10;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px 16px 100px;
+    }
+
+    /* Generate button */
+    .gen-btn {
+      width: 100%;
+      padding: 18px;
+      background: linear-gradient(135deg, var(--gold) 0%, #a8722a 100%);
+      border: none;
+      border-radius: 16px;
+      color: #0b1520;
+      font-family: 'Tajawal', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-bottom: 24px;
+      box-shadow: 0 8px 30px rgba(201,168,76,0.25), 0 2px 8px rgba(0,0,0,0.4);
+      transition: transform 0.15s, box-shadow 0.15s;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .gen-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(201,168,76,0.35); }
+    .gen-btn:active { transform: translateY(0); }
+    .gen-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    /* Loading */
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 40px;
+      color: var(--text-dim);
+    }
+    .loading.show { display: block; }
+
+    .spinner {
+      width: 48px; height: 48px;
+      border: 3px solid var(--border);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Cards */
+    .cards { display: flex; flex-direction: column; gap: 16px; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px 20px;
+      backdrop-filter: blur(10px);
+      animation: slideUp 0.5s ease both;
+    }
+    @keyframes slideUp {
+      from { opacity:0; transform:translateY(20px); }
+      to { opacity:1; transform:translateY(0); }
+    }
+    .card:nth-child(2) { animation-delay: 0.1s; }
+    .card:nth-child(3) { animation-delay: 0.2s; }
+
+    .card-header {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .card-icon {
+      width: 38px; height: 38px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .icon-quality { background: rgba(26,140,122,0.2); border: 1px solid rgba(26,140,122,0.3); }
+    .icon-fiqh { background: rgba(201,168,76,0.15); border: 1px solid rgba(201,168,76,0.25); }
+    .icon-quran { background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.25); }
+
+    .card-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+    .label-quality { color: var(--teal-light); }
+    .label-fiqh { color: var(--gold); }
+    .label-quran { color: #a78bfa; }
+
+    .card-title {
+      font-family: 'Tajawal', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+
+    .card-body {
+      font-family: 'Tajawal', sans-serif;
+      font-size: 0.92rem;
+      color: #c8d4e0;
+      line-height: 1.9;
+    }
+
+    /* Quran card special */
+    .ayah-text {
+      font-family: 'Amiri', serif;
+      font-size: 1.25rem;
+      line-height: 2.2;
+      color: var(--gold-light);
+      text-align: center;
+      padding: 16px;
+      background: rgba(201,168,76,0.06);
+      border-radius: 12px;
+      margin-bottom: 14px;
+      border: 1px solid rgba(201,168,76,0.12);
+    }
+
+    .tafseer-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #a78bfa;
+      margin-bottom: 8px;
+    }
+
+    /* Notification settings */
+    .notif-section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .notif-header {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 16px;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .notif-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .notif-row:last-child { border-bottom: none; }
+
+    .notif-label { font-size: 0.88rem; color: var(--text-dim); }
+
+    /* Toggle switch */
+    .toggle {
+      position: relative; width: 48px; height: 26px;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; inset: 0;
+      background: rgba(255,255,255,0.1);
+      border-radius: 26px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      width: 20px; height: 20px;
+      left: 3px; top: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: 0.3s;
+    }
+    input:checked + .toggle-slider { background: var(--teal); }
+    input:checked + .toggle-slider::before { transform: translateX(22px); }
+
+    /* Time input */
+    .time-input {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 14px;
+      color: var(--gold);
+      font-family: 'Tajawal', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      width: 110px;
+      text-align: center;
+    }
+    .time-input:focus { outline: none; border-color: var(--gold); }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-dim);
+    }
+    .empty-icon { font-size: 3rem; margin-bottom: 12px; opacity: 0.5; }
+    .empty-text { font-size: 0.9rem; line-height: 1.7; }
+
+    /* Status bar */
+    .status-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: rgba(11,21,32,0.95);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+      padding: 12px 24px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+    }
+
+    .status-text { font-size: 0.78rem; color: var(--text-dim); }
+    .status-badge {
+      font-size: 0.72rem;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+    .badge-on { background: rgba(26,140,122,0.2); color: var(--teal-light); border: 1px solid rgba(26,140,122,0.3); }
+    .badge-off { background: rgba(255,255,255,0.06); color: var(--text-dim); border: 1px solid rgba(255,255,255,0.1); }
+
+    /* Error */
+    .error-msg {
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.2);
+      border-radius: 12px;
+      padding: 16px;
+      color: #fca5a5;
+      font-size: 0.88rem;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="geo-lines">
+  <svg viewBox="0 0 400 800" preserveAspectRatio="xMidYMid slice">
+    <line x1="0" y1="200" x2="400" y2="400" stroke="white" stroke-width="0.5"/>
+    <line x1="400" y1="100" x2="0" y2="500" stroke="white" stroke-width="0.5"/>
+    <circle cx="200" cy="400" r="200" fill="none" stroke="white" stroke-width="0.5"/>
+    <circle cx="200" cy="400" r="120" fill="none" stroke="white" stroke-width="0.5"/>
+    <polygon points="200,50 380,350 20,350" fill="none" stroke="white" stroke-width="0.5"/>
+  </svg>
+</div>
+
+<header>
+  <div class="logo-wrap">
+    <div class="logo-icon">☀️</div>
+    <h1>KHALED DAILY</h1>
+  </div>
+  <div class="subtitle">علم · فقه · قرآن كريم</div>
+</header>
+
+<div class="date-bar">
+  <div class="date-dot"></div>
+  <span id="dateDisplay">جارٍ تحميل التاريخ...</span>
+</div>
+
+<main>
+
+  <!-- Notification Settings -->
+  <div class="notif-section">
+    <div class="notif-header">
+      <span>🔔</span>
+      <span>إعدادات الإشعار اليومي</span>
+    </div>
+    <div class="notif-row">
+      <span class="notif-label">تفعيل الإشعار اليومي</span>
+      <label class="toggle">
+        <input type="checkbox" id="notifToggle" onchange="toggleNotification()" />
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="notif-row">
+      <span class="notif-label">وقت الإشعار</span>
+      <input type="time" id="notifTime" class="time-input" value="17:00" onchange="saveTime()" />
+    </div>
+  </div>
+
+  <!-- Generate Button -->
+  <button class="gen-btn" id="genBtn" onclick="generateContent()">
+    <span>✨</span>
+    <span>اجلب معلومة النهاردة</span>
+  </button>
+
+  <!-- Error -->
+  <div class="error-msg" id="errorMsg" style="display:none"></div>
+
+  <!-- Loading -->
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <div>جارٍ التحضير... لحظة</div>
+  </div>
+
+  <!-- Cards container -->
+  <div class="cards" id="cards">
+    <div class="empty-state">
+      <div class="empty-icon">📖</div>
+      <div class="empty-text">اضغط الزر لجلب معلومة الجودة<br/>والفقه والآية القرآنية ليومك</div>
+    </div>
+  </div>
+
+</main>
+
+<!-- Status Bar -->
+<div class="status-bar">
+  <span class="status-text" id="statusText">الإشعارات متوقفة</span>
+  <span class="status-badge badge-off" id="statusBadge">غير مفعّل</span>
+</div>
+
+<script>
+// ─── Date display ───────────────────────────────────────────
+function updateDate() {
+  const now = new Date();
+  const opts = { weekday:'long', year:'numeric', month:'long', day:'numeric' };
+  document.getElementById('dateDisplay').textContent = now.toLocaleDateString('ar-EG', opts);
+}
+updateDate();
+
+// ─── Notification toggle ─────────────────────────────────────
+let notifInterval = null;
+
+function saveTime() {
+  localStorage.setItem('kd_time', document.getElementById('notifTime').value);
+  if (document.getElementById('notifToggle').checked) {
+    scheduleNotification();
+  }
+}
+
+async function toggleNotification() {
+  const on = document.getElementById('notifToggle').checked;
+  if (on) {
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') {
+      alert('يرجى السماح بالإشعارات من إعدادات المتصفح');
+      document.getElementById('notifToggle').checked = false;
+      return;
+    }
+    localStorage.setItem('kd_notif', '1');
+    scheduleNotification();
+    updateStatusBar(true);
+  } else {
+    localStorage.setItem('kd_notif', '0');
+    if (notifInterval) { clearInterval(notifInterval); notifInterval = null; }
+    updateStatusBar(false);
+  }
+}
+
+function scheduleNotification() {
+  if (notifInterval) clearInterval(notifInterval);
+  notifInterval = setInterval(() => {
+    const now = new Date();
+    const [h, m] = (localStorage.getItem('kd_time') || '17:00').split(':').map(Number);
+    if (now.getHours() === h && now.getMinutes() === m && now.getSeconds() < 30) {
+      sendNotification();
+    }
+  }, 20000);
+}
+
+function sendNotification() {
+  if (Notification.permission === 'granted') {
+    const n = new Notification('☀️ Khaled Daily', {
+      body: 'معلومة اليوم جاهزة! افتح التطبيق 📖',
+      icon: 'icon-192.png',
+      badge: 'icon-192.png',
+      tag: 'khaled-daily',
+      renotify: true
+    });
+    n.onclick = () => { window.focus(); n.close(); generateContent(); };
+  }
+}
+
+function updateStatusBar(on) {
+  const time = document.getElementById('notifTime').value;
+  document.getElementById('statusText').textContent = on ? `إشعار يومي الساعة ${time}` : 'الإشعارات متوقفة';
+  document.getElementById('statusBadge').textContent = on ? 'مفعّل ✓' : 'غير مفعّل';
+  document.getElementById('statusBadge').className = 'status-badge ' + (on ? 'badge-on' : 'badge-off');
+}
+
+// ─── Restore saved settings ──────────────────────────────────
+window.addEventListener('load', () => {
+  const savedTime = localStorage.getItem('kd_time');
+  if (savedTime) document.getElementById('notifTime').value = savedTime;
+  const savedNotif = localStorage.getItem('kd_notif');
+  if (savedNotif === '1' && Notification.permission === 'granted') {
+    document.getElementById('notifToggle').checked = true;
+    scheduleNotification();
+    updateStatusBar(true);
+  }
+});
+
+// ─── Generate content via Claude API ─────────────────────────
+async function generateContent() {
+  const btn = document.getElementById('genBtn');
+  const loading = document.getElementById('loading');
+  const cards = document.getElementById('cards');
+  const errorMsg = document.getElementById('errorMsg');
+
+  btn.disabled = true;
+  loading.classList.add('show');
+  cards.innerHTML = '';
+  errorMsg.style.display = 'none';
+
+  const prompt = `أنت مساعد يومي متخصص. أعطني اليوم ثلاث معلومات بالعربية الفصحى البسيطة:
+
+1. معلومة علمية في مجال الجودة وسلامة الغذاء (HACCP, BRC, ISO 22000 أو ما شابه) — عنوان + شرح مختصر مفيد في 3-4 جمل.
+
+2. معلومة فقهية نافعة من الفقه الإسلامي — عنوان + الحكم الشرعي وأدلته باختصار في 3-4 جمل.
+
+3. آية قرآنية كريمة مع تفسيرها على طريقة الشيخ الشعراوي رحمه الله — الآية كاملة مع اسم السورة ورقم الآية، ثم تفسير بأسلوب الشعراوي المميز في 4-5 جمل.
+
+أجب بـ JSON فقط بدون أي مقدمة أو backticks، بهذا الشكل تماماً:
+{
+  "quality": { "title": "...", "body": "..." },
+  "fiqh": { "title": "...", "body": "..." },
+  "quran": { "surah": "...", "ayah_number": "...", "ayah_text": "...", "tafseer": "..." }
+}`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await res.json();
+    const text = data.content?.map(b => b.text || '').join('') || '';
+    const clean = text.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+    renderCards(parsed);
+  } catch (err) {
+    errorMsg.textContent = 'حدث خطأ أثناء جلب المعلومات. حاول مرة أخرى.';
+    errorMsg.style.display = 'block';
+    console.error(err);
+  } finally {
+    btn.disabled = false;
+    loading.classList.remove('show');
+  }
+}
+
+// ─── Render cards ────────────────────────────────────────────
+function renderCards(data) {
+  const cards = document.getElementById('cards');
+  cards.innerHTML = `
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-quality">🔬</div>
+        <div>
+          <div class="card-label label-quality">جودة وسلامة غذاء</div>
+          <div class="card-title">${escHtml(data.quality.title)}</div>
+        </div>
+      </div>
+      <div class="card-body">${escHtml(data.quality.body)}</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-fiqh">📿</div>
+        <div>
+          <div class="card-label label-fiqh">فقه إسلامي</div>
+          <div class="card-title">${escHtml(data.fiqh.title)}</div>
+        </div>
+      </div>
+      <div class="card-body">${escHtml(data.fiqh.body)}</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-quran">🕌</div>
+        <div>
+          <div class="card-label label-quran">تفسير الشعراوي</div>
+          <div class="card-title">سورة ${escHtml(data.quran.surah)} — الآية ${escHtml(data.quran.ayah_number)}</div>
+        </div>
+      </div>
+      <div class="ayah-text">${escHtml(data.quran.ayah_text)}</div>
+      <div class="tafseer-label">▸ تفسير الشيخ الشعراوي رحمه الله</div>
+      <div class="card-body">${escHtml(data.quran.tafseer)}</div>
+    </div>
+  `;
+}
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// ─── Service Worker ──────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(console.error);
+}
+</script>
+</body>
+</html>
